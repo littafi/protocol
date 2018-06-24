@@ -7,7 +7,7 @@ The Contract source code can be verified here at https://etherscan.io/address/0x
 
 As a decentralised application (dapp), you need an ethereum client/wallet to interact with the protocol at https://littafi.io <br>
 
-> Desktop Clients <a href="https://metamask.io">Metamask</a> or <a href="https://www.brave.com">Brave Browser</a>
+> Desktop Clients <a href="https://metamask.io">Metamask</a> or <a href="https://www.brave.com">Brave Browser</a> <br>
 > Android/iOS users can make use of<a href="https://www.toshi.org">Toshi</a> or <a href="https://www.cipherbrowser.com">Cipher Wallet</a>
 
 Site Link: https://littafi.io
