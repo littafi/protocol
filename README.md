@@ -2,7 +2,7 @@
 
 The protocol was built on the Ethereum blockchain using the smart contract language Solidity. <br>
 The decentralized storage - IPFS component uses the https://infura.io node for hosting files on the IPFS network. <br> 
-Web3.js is used for the frontend to interact with "contract Littafi". <br>
+Web3.js is used for the frontend to interact with Littafi.sol <br>
 
 The Protocol was designed to be interactive with all users/clients and was built with an oracle within the system that mediates seamlessly from managing user content and timestamping to storing content on IPFS. <br>
 
