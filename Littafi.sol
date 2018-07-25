@@ -3,7 +3,56 @@ pragma solidity ^0.4.23;
 /* Team Littafi
 **/
 
- import './SafeMath.sol';
+ 
+/**
+ * Math operations with safety checks
+ */
+library SafeMath {
+  function mul(uint256 a, uint256 b) public pure returns (uint256) {
+     if (a == 0) {
+      return 0;
+    }
+    uint256 c = a * b;
+    assert( c / a == b);
+    return c;
+  }
+
+  function div(uint256 a, uint256 b) public pure returns (uint256) {
+    //assert(b > 0); // Solidity automatically throws when dividing by 0
+    uint256 c = a / b;
+    //assert(a == b * c + a % b); // There is no case in which this doesn't hold
+    return c;
+  }
+
+  function sub(uint256 a, uint256 b) public pure returns (uint256) {
+    assert(b <= a);
+    return a - b;
+  }
+
+  function add(uint256 a, uint256 b) public pure returns (uint256) {
+    uint256 c = a + b;
+    assert(c >= a);
+    return c;
+  }
+
+  function max64(uint64 a, uint64 b) public pure returns (uint64) {
+    return a >= b ? a : b;
+  }
+
+  function min64(uint64 a, uint64 b) public pure returns (uint64) {
+    return a < b ? a : b;
+  }
+
+  function max256(uint256 a, uint256 b) external pure returns (uint256) {
+    return a >= b ? a : b;
+  }
+
+  function min256(uint256 a, uint256 b) external pure returns (uint256) {
+    return a < b ? a : b;
+  }
+
+}
+
 
  contract LittafiOwned {
     address public owner;
@@ -49,6 +98,12 @@ pragma solidity ^0.4.23;
       mapping(bytes32 => string)  littIPFS;
 
       mapping(bytes32 => uint256) littHashID;
+      
+      mapping(bytes32 => string)  littTimestamp;
+      
+      mapping(bytes32 => string)  littMetadata;
+      
+      mapping(bytes32 => string)  littUnique;
 
       mapping(bytes32 => uint256) littCapsule;
 
@@ -69,7 +124,7 @@ pragma solidity ^0.4.23;
       mapping(address => bytes32[]) subscriberContentHashes;
 
       mapping(address => uint256)  subscriberContentCount;
-
+      
       mapping(address => bool) transferred;
 
       struct littafiContents{
@@ -139,7 +194,7 @@ pragma solidity ^0.4.23;
           LittafiOwned(msg.sender);
       }
 
-      function subscribtionLittafi(uint256 _assignedID,string _timestamp, string _poolName) public payable onlyLittafiNonSubscribed(){
+      function subscribtionLittafi(uint256 _assignedID,string _timestamp, string _poolName) public payable onlyLittafiNonSubscribed() returns (bool){
 
           if(_assignedID > 0 && setPoolAdmin[_assignedID] == msg.sender){
              subscriber[msg.sender].subID=littClientId;
@@ -153,10 +208,9 @@ pragma solidity ^0.4.23;
              littClientId++;
              littAdmins++;
              owner.transfer(msg.value);
-             littafiAccount.add(msg.value);
 
              emit littClientSubscribed(msg.sender,_timestamp,msg.value,_assignedID,true);
-             return;
+             return true;
           }else{
               subscriber[msg.sender].subID=littClientId;
               subscriber[msg.sender].clientPool=0;
@@ -165,16 +219,16 @@ pragma solidity ^0.4.23;
               owner.transfer(msg.value);
 
               emit littClientSubscribed(msg.sender,_timestamp,msg.value,0,true);
-              return;
+              return true;
           }
       }
 
-      function littafiContentCommit(bytes32 _hash,string _ipfs,string _timestamp,string _metadata,string _unique,bool _sentinel) public payable onlyLittafiSubscribed(){
+      function littafiContentCommit(bytes32 _hash,string _ipfs,string _timestamp,string _metadata,string _unique,bool _sentinel) public payable onlyLittafiSubscribed() returns(bool){
 
              uint256 id=littHashID[_hash];
              if (littClientAddress[_hash] != address(0)){
                 emit littContent(littClientAddress[_hash],_hash,littIPFS[_hash],littafi[id].timestamp,littafi[id].metadata,littafi[id].unique,littafi[id].clientPool,littafi[id].access,true);
-                return;
+                return true;
              }else{
 
               if(admins[msg.sender].isAdmin == true) sentinel=_sentinel;
@@ -186,53 +240,59 @@ pragma solidity ^0.4.23;
               subscriberContentHashes[msg.sender].push(_hash);
               littClientAddress[_hash]=msg.sender;
               littIPFS[_hash]=_ipfs;
+              littTimestamp[_hash]=_timestamp;
+              littMetadata[_hash]=_metadata;
+              littUnique[_hash]=_unique;
               littHashID[_hash]=littID;
               littID++;
               owner.transfer(msg.value);
 
               emit littContent(msg.sender,_hash,_ipfs,_timestamp,_metadata,_unique,subscriber[msg.sender].clientPool,sentinel,true);
-              return;
+              return true;
              }
-
       }
 
-      function littafiTimeCapsule(bytes32 _hash,string _ipfs,string _timestamp,string _metadata,string _unique,uint256 _capsuleRelease) public payable onlyLittafiSubscribed(){
+      function littafiTimeCapsule(bytes32 _hash,string _ipfs,string _timestamp,string _metadata,string _unique,uint256 _capsuleRelease) public payable onlyLittafiSubscribed() returns(bool){
 
-             uint256 id=littHashID[_hash];
+              uint256 id=littHashID[_hash];
              if (littClientAddress[_hash] != address(0)){
                 emit littContent(littClientAddress[_hash],_hash,littIPFS[_hash],littafi[id].timestamp,littafi[id].metadata,littafi[id].unique,littafi[id].clientPool,littafi[id].access,true);
-                return;
+                return true;
              }else{
 
               littafiContents memory commit=littafiContents(littID,_hash,_ipfs,_timestamp,_metadata,_unique,subscriber[msg.sender].clientPool,sentinel);
               littafi.push(commit);
 
               subscriberContentCount[msg.sender]++;
+              subscriberContentHashes[msg.sender].push(_hash);
               littCapsule[_hash]=_capsuleRelease;
               littClientAddress[_hash]=msg.sender;
               littIPFS[_hash]=_ipfs;
+              littTimestamp[_hash]=_timestamp;
+              littMetadata[_hash]=_metadata;
+              littUnique[_hash]=_unique;
               littHashID[_hash]=littID;
               littID++;
               owner.transfer(msg.value);
 
               emit littContent(msg.sender,_hash,_ipfs,_timestamp,_metadata,_unique,subscriber[msg.sender].clientPool,sentinel,true);
-              return;
+              return true;
              }
 
       }
 
-      function transferContentOwnership(bytes32 _hash, address _address, string _timestamp) public {
+      function transferContentOwnership(bytes32 _hash, address _address, string _timestamp) public returns(bool){
           require(littClientAddress[_hash] == msg.sender);
           littClientAddress[_hash]=_address;
           emit littContentOwnershipTransferred(_hash,_address,_timestamp);
-          return;
+          return true;
       }
 
-      function getLittafiContent(bytes32 _hash,uint256 _poolID) public payable{
+      function getLittafiContent(bytes32 _hash,uint256 _poolID) public payable returns(bool){
         if (littClientAddress[_hash] != address(0) && littafi[littHashID[_hash]].clientPool==_poolID){
             owner.transfer(msg.value);
             emit littContent(littClientAddress[_hash],_hash,littIPFS[_hash],littafi[littHashID[_hash]].timestamp,littafi[littHashID[_hash]].metadata,littafi[littHashID[_hash]].unique,littafi[littHashID[_hash]].clientPool,littafi[littHashID[_hash]].access,true);
-            return;
+            return true;
         }
       }
 
@@ -243,14 +303,14 @@ pragma solidity ^0.4.23;
           return true;
       }
 
-      function setAssignedID(address _address,uint256 _assignedID, string _timestamp) public onlyDelegate(){
+      function setAssignedID(address _address,uint256 _assignedID, string _timestamp) public onlyDelegate() returns(bool){
           require(setPoolAdmin[_assignedID] == address(0));
           setPoolAdmin[_assignedID]=_address;
           emit littafiAssignedID(msg.sender,_timestamp,_assignedID,_address);
-          return;
+          return true;
       }
 
-      function changeAssignedAdmin(address _newAdmin, uint256 _assignedID, string _timestamp) public onlyOwner(){
+      function changeAssignedAdmin(address _newAdmin, uint256 _assignedID, string _timestamp) public onlyOwner() returns(bool){
           address _previousAdmin=poolAdmin[_assignedID];
 
           admins[_previousAdmin].isAdmin=false;
@@ -266,17 +326,17 @@ pragma solidity ^0.4.23;
           littID++;
 
           emit littafiAdminReassigned(_previousAdmin,_newAdmin,_timestamp,_assignedID);
-          return;
+          return true;
       }
 
       function getPoolAdmin(uint256 _poolID) public view onlyDelegate() returns(address){
           return poolAdmin[_poolID];
       }
 
-      function modifyContentAccess(bytes32 _hash, bool _access, uint256 _poolID)public onlyLittafiAdmin(_poolID){
+      function modifyContentAccess(bytes32 _hash, bool _access, uint256 _poolID)public onlyLittafiAdmin(_poolID) returns(bool){
          littafi[littHashID[_hash]].access=_access;
          emit littContentAccessModified(msg.sender,_hash,_poolID,_access);
-         return;
+         return true;
       }
 
       function getClientCount() public view returns(uint256){
@@ -291,10 +351,10 @@ pragma solidity ^0.4.23;
           return littAdmins;
       }
 
-      function setPoolName(string _poolName,uint256 _poolID) public onlyLittafiAdmin(_poolID){
+      function setPoolName(string _poolName,uint256 _poolID) public onlyLittafiAdmin(_poolID) returns(bool){
           admins[msg.sender].poolName=_poolName;
           emit littPoolModified(msg.sender,_poolName,_poolID);
-          return;
+          return true;
       }
 
       function getPoolName(uint256 _poolID) public view onlyLittafiAdmin(_poolID) returns(string){
@@ -344,5 +404,10 @@ pragma solidity ^0.4.23;
       function littCapsuleGet(bytes32 _hash) public view returns(uint256){
           return littIsCapsule(_hash) == true ? littCapsule[_hash] : 0;
       }
-
+      
+      function littGetContent(bytes32 _hash,uint256 _poolID) public view returns(address, string, string, string, string) {
+         if (littClientAddress[_hash] != address(0) && littafi[littHashID[_hash]].clientPool==_poolID)
+          return (littClientAddress[_hash],littIPFS[_hash],littTimestamp[_hash],littMetadata[_hash],littUnique[_hash]);
+      }
+      
 }
