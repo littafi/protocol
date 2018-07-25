@@ -6,8 +6,6 @@ Web3.js is used for the frontend to interact with Littafi.sol <br>
 
 The Protocol was designed to be interactive with all users/clients and was built with an oracle within the system that mediates seamlessly from managing user content and timestamping to storing content on IPFS. <br>
 
-The Contract source code can be verified here at https://etherscan.io/address/0xabb2030ed43d1a881b7ed5cdc9fb192ee94c87f4#code<br>
-
 As a decentralised application (dapp), you need an ethereum client/wallet to interact with the protocol at https://littafi.io <br>
 
 Your identity on Ethereum and as considered by the protocol is your ethereum address(from your wallet) of which any digital content is associated with during the time of upload and timestamping so at to autonomously verify ownership during hash query. <br>
